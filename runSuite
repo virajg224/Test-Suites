@@ -1,0 +1,47 @@
+usage() {
+        echo "Usage: $0  [test suite file] [test program file]"  1>&2
+        exit 1
+}
+
+if [ ${#} -ne 2 ]; then
+        usage
+fi
+
+for file in `cat "$1"`; do
+     temf=`mktemp /tmp/tempfile.XXX`
+        if [ -r "$file".out ]; then
+                if [ -r "$file".in ]; then
+       		 	  if [ -r "$file".args ]; then
+        	 		"${2}" `cat "$file".args`< "$file".in > $temf
+			  else 		
+                                "${2}" < "$file".in > $temf
+			  fi
+        	else
+		          if [ -r "$file".args ]; then
+                                "${2}" `cat "$file".args` > $temf
+                          else                                                  
+                                "${2}" > $temf
+                          fi
+        	fi
+            diff "$file".out $temf > /dev/null
+              if [ $?  -ne 0 ]; then
+                 echo Test failed: "$file"
+                 echo Args:
+                 if [ -r "$file".args ]; then
+			 cat "$file".args
+                 fi
+		 echo Input:
+		 if [ -r "$file".in ]; then                 
+			cat "$file".in
+                 fi
+		 echo Expected:
+               		 cat "$file".out
+                 echo Actual:
+                	 cat ${temf}
+       	   fi
+	 else
+             echo "ERROR: Missing or unreadable .out file." 1>&2
+             exit 1
+         fi
+     rm ${temf}
+done
