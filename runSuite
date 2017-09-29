@@ -1,3 +1,5 @@
+#!/bin/bash
+
 usage() {
         echo "Usage: $0  [test suite file] [test program file]"  1>&2
         exit 1
